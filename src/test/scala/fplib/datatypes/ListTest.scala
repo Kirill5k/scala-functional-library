@@ -25,5 +25,23 @@ class ListTest extends FunSpec with Matchers {
         List.foldRight(list)(0)(_+_) should be (15)
       }
     }
+
+    describe("length") {
+      it("should return length of a list") {
+        val list = List(1,2,3,4,5)
+        List.length(list) should be (5)
+      }
+
+      it("should return length of an empty list") {
+        List.length(Nil) should be (0)
+      }
+    }
+
+    describe("reverse") {
+      it("should reverse a list") {
+        val list = List(1,2,3,4,5)
+        List.reverse(list) should be (List(5,4,3,2,1))
+      }
+    }
   }
 }

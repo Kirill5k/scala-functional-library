@@ -12,6 +12,8 @@ object List {
     case Cons(x, xs) => x + sum(xs)
   }
 
+  def sumViaFold(is: List[Int]): Int = foldLeft(is)(0)(_ + _)
+
   def product(ds: List[Double]): Double = ds match {
     case Nil => 1.0
     case Cons(0.0, _) => 0.0
@@ -58,9 +60,14 @@ object List {
     case Cons(h, t) => f(h, foldRight(t)(z)(f))
   }
 
+  @scala.annotation.tailrec
   def foldLeft[A, B](as: List[A])(z: B)(f: (A, B) => B): B = as match {
     case Nil => z
     case Cons(h, t) => foldLeft(t)(f(h, z))(f)
   }
+
+  def length[A](as: List[A]): Int = foldLeft(as)(0)((_, b) => b + 1)
+
+  def reverse[A](as: List[A]): List[A] = foldLeft(as)(List[A]())((el, res) => Cons(el, res))
 }
 
