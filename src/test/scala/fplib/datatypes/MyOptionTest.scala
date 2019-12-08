@@ -2,7 +2,7 @@ package fplib.datatypes
 
 import org.scalatest.{FunSpec, Matchers}
 
-class OptionTest extends FunSpec with Matchers {
+class MyOptionTest extends FunSpec with Matchers {
 
   describe("option") {
     it("map") {
@@ -29,6 +29,21 @@ class OptionTest extends FunSpec with Matchers {
     it("getOrElse") {
       Some(1).getOrElse(2) should be (1)
       None.getOrElse(2) should be (2)
+    }
+
+    it("map2") {
+      MyOption.map2(Some(1), Some(2))(_ + _) should be (Some(3))
+      MyOption.map2(None: MyOption[Int], Some(2))(_ + _) should be (None)
+      MyOption.map2(Some(1),None)(_ + _) should be (None)
+    }
+
+    it("sequence") {
+      MyOption.sequence(List(Some(1), Some(2), Some(3))) should be (Some(List(1,2,3)))
+      MyOption.sequence(List(Some(1), None, Some(3))) should be (None)
+    }
+
+    it("traverse") {
+      MyOption.traverse(List(1, 2, 3))(a => Some(a.toString)) should be (Some(List("1","2","3")))
     }
   }
 }
