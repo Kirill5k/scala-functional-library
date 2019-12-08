@@ -1,6 +1,7 @@
 package fplib.datatypes
 
 import org.scalatest.{FunSpec, Matchers}
+import scala.collection.immutable.List
 
 class OptionTest extends FunSpec with Matchers {
 
