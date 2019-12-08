@@ -20,9 +20,11 @@ object List {
     case Cons(x, xs) => x * product(xs)
   }
 
+  def productViaFold(ds: List[Double]): Double = foldLeft(ds)(1.0)(_ * _)
+
   def tail[A](as: List[A]): Option[List[A]] = as match {
     case Nil => None
-    case Cons(h, t) => Some(t)
+    case Cons(_, t) => Some(t)
   }
 
   def setHead[A](as: List[A])(h: A): Option[List[A]] = as match {
@@ -44,10 +46,12 @@ object List {
     case _ => as
   }
 
-  def append[A](as1: List[A])(as2: List[A]): List[A] = as1 match {
+  def append[A](as1: List[A], as2: List[A]): List[A] = as1 match {
     case Nil => as2
-    case Cons(h, t) => Cons(h, append(t)(as2))
+    case Cons(h, t) => Cons(h, append(t, as2))
   }
+
+  def appendViaFold[A](as1: List[A])(as2: List[A]): List[A] = foldRight(as1)(as2)( Cons(_, _))
 
   def init[A](as: List[A]): List[A] = as match {
     case Nil => Nil
@@ -57,17 +61,44 @@ object List {
 
   def foldRight[A, B](as: List[A])(z: B)(f: (A, B) => B): B = as match {
     case Nil => z
-    case Cons(h, t) => f(h, foldRight(t)(z)(f))
+    case Cons(x, xs) => f(x, foldRight(xs)(z)(f))
   }
 
   @scala.annotation.tailrec
-  def foldLeft[A, B](as: List[A])(z: B)(f: (A, B) => B): B = as match {
+  def foldLeft[A, B](as: List[A])(z: B)(f: (B, A) => B): B = as match {
     case Nil => z
-    case Cons(h, t) => foldLeft(t)(f(h, z))(f)
+    case Cons(h, t) => foldLeft(t)(f(z, h))(f)
   }
 
-  def length[A](as: List[A]): Int = foldLeft(as)(0)((_, b) => b + 1)
+  def foldLeftViaFoldRight[A, B](as: List[A])(z: B)(f: (B, A) => B): B =
+    foldRight(as)((b:B) => b)((a,g) => b => g(f(b,a)))(z)
 
-  def reverse[A](as: List[A]): List[A] = foldLeft(as)(List[A]())((el, res) => Cons(el, res))
+  def length[A](as: List[A]): Int = foldLeft(as)(0)((b, _) => b + 1)
+
+  def reverse[A](as: List[A]): List[A] = foldLeft(as)(List[A]())((acc, el) => Cons(el, acc))
+
+  def flatten[A](l: List[List[A]]): List[A] = foldRight(l)(List[A]())(append)
+
+  def addOne(is: List[Int]): List[Int] = foldRight(is)(List[Int]())((el, acc) => Cons(el+1, acc))
+  def addOneViaMap(is: List[Int]): List[Int] = map(is)(_+1)
+
+  def map[A, B](as: List[A])(f: A => B): List[B] = foldRight(as)(List[B]())((el, acc) => Cons(f(el), acc))
+
+  def filter[A](as: List[A])(f: A => Boolean): List[A] = as match {
+    case Nil => Nil
+    case Cons(x, xs) if f(x) => Cons(x, filter(xs)(f))
+    case Cons(_, xs) => filter(xs)(f)
+  }
+
+  def filterViaFold[A](as: List[A])(f: A => Boolean): List[A] = foldRight(as)(List[A]())((el, acc) => if (f(el)) Cons(el, acc) else acc)
+
+  def filterViaFlatMap[A](as: List[A])(f: A => Boolean): List[A] = flatMap(as)(a => if (f(a)) Cons(a, Nil) else Nil)
+
+  def flatMap[A, B](as: List[A])(f: A => List[B]): List[B] = flatten(map(as)(f))
+
+  def zipWith[A, B, C](as: List[A], bs: List[B])(f: (A, B) => C): List[C] = (as, bs) match {
+    case (Nil, _) | (_, Nil) => Nil
+    case (Cons(x, xs), Cons(y, ys)) => Cons(f(x, y), zipWith(xs, ys)(f))
+  }
 }
 
