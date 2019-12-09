@@ -61,7 +61,7 @@ class ListTest extends FunSpec with Matchers {
       }
 
       it("should return length of an empty list") {
-        List.length(Empty) should be (0)
+        List.length(EmptyList) should be (0)
       }
     }
 
