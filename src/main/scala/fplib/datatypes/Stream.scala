@@ -7,6 +7,7 @@ sealed trait Stream[+A] {
     case EmptyStream => None
     case StreamCons(h, _) => Some(h())
   }
+  def headViaFold: Option[A] = foldRight[Option[A]](None)((el, _) => Some(el))
   def toList: List[A] = this match {
     case EmptyStream => EmptyList
     case StreamCons(h, t) => ListCons(h(), t().toList)
@@ -21,6 +22,21 @@ sealed trait Stream[+A] {
   def takeWhile(f: A => Boolean): Stream[A] = this match {
     case StreamCons(h, t) if f(h()) => cons(h(), t().takeWhile(f))
     case _ => empty
+  }
+  def takeWhileViaFold(f: A => Boolean): Stream[A] =
+    foldRight[Stream[A]](empty)((el, acc) => if(f(el)) cons(el, acc) else acc)
+  def foldRight[B](z: => B)(f: (A, => B) => B): B = this match {
+    case StreamCons(h, t) => f(h(), t().foldRight(z)(f))
+    case _ => z
+  }
+  def exists(f: A => Boolean): Boolean = this match {
+    case StreamCons(h, t) => f(h()) || t().exists(f)
+    case _ => false
+  }
+  def existsViaFold(f: A => Boolean): Boolean = foldRight(false)((a, b) => f(a) || b)
+  def forAll(f: A => Boolean): Boolean = this match {
+    case StreamCons(h, t) => f(h()) && t().forAll(f)
+    case EmptyStream => true
   }
 }
 case object EmptyStream extends Stream[Nothing]
