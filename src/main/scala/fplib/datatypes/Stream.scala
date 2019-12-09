@@ -11,4 +11,6 @@ object Stream {
     StreamCons(() => head, () => tail)
   }
   def empty[A]: Stream[A] = EmptyStream
+
+  def apply[A](as: A*): Stream[A] = if (as.isEmpty) EmptyStream else cons(as.head, apply(as.tail: _*))
 }
