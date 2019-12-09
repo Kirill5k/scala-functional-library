@@ -38,6 +38,11 @@ sealed trait Stream[+A] {
     case StreamCons(h, t) => f(h()) && t().forAll(f)
     case EmptyStream => true
   }
+  //TODO
+  def map[B](f: A => B): Stream[B] = ???
+  def append[B>:A](s: => Stream[B]): Stream[B] = ???
+  def filter(f: A => Boolean): Stream[A] = ???
+  def flatMap[B](f: A => Stream[B]): Stream[B] = ???
 }
 case object EmptyStream extends Stream[Nothing]
 case class StreamCons[+A](h: () => A, t: () => Stream[A]) extends Stream[A]
