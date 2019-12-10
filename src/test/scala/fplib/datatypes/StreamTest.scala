@@ -89,9 +89,9 @@ class StreamTest extends FunSpec with Matchers {
       }
     }
 
-    describe("flamtMap") {
+    describe("flatMap") {
       it("should apply f to all elements") {
-        ints.map(i => Stream(i.toString)).toList should be (List("1", "2", "3", "4", "5"))
+        ints.flatMap(i => Stream(i.toString)).toList should be (List("1", "2", "3", "4", "5"))
       }
     }
   }
