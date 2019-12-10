@@ -94,5 +94,33 @@ class StreamTest extends FunSpec with Matchers {
         ints.flatMap(i => Stream(i.toString)).toList should be (List("1", "2", "3", "4", "5"))
       }
     }
+
+    describe("find") {
+      it("should find an element based on predicate") {
+        ints.find(_ > 3) should be (Some(4))
+        ints.find(_ > 10) should be (None)
+      }
+    }
+
+    describe("constant") {
+      it("should create infinite stream") {
+        Stream.constant(1).take(10).toList should be (List(1,1,1,1,1,1,1,1,1,1))
+        Stream.constantViaUnfold(1).take(10).toList should be (List(1,1,1,1,1,1,1,1,1,1))
+      }
+    }
+
+    describe("from") {
+      it("should create infinite stream of number") {
+        Stream.from(1).take(10).toList should be (List(1,2,3,4,5,6,7,8,9,10))
+        Stream.fromViaUnfold(1).take(10).toList should be (List(1,2,3,4,5,6,7,8,9,10))
+      }
+    }
+
+    describe("fibs") {
+      it("should generate sequence of fibs") {
+        Stream.fibs().take(10).toList should be (List(0,1,1,2,3,5,8,13,21,34))
+        Stream.fibsViaUnfold().take(10).toList should be (List(0,1,1,2,3,5,8,13,21,34))
+      }
+    }
   }
 }

@@ -55,11 +55,28 @@ sealed trait Stream[+A] {
   def filterViaFold(f: A => Boolean): Stream[A] =
     foldRight[Stream[A]](empty)((el, acc) => if (f(el)) cons(el, acc) else acc)
   def flatMap[B](f: A => Stream[B]): Stream[B] = foldRight(empty[B])((h,t) => f(h) append t)
+  def find(f: A => Boolean): Option[A] = filter(f).head
 }
 case object EmptyStream extends Stream[Nothing]
 case class StreamCons[+A](h: () => A, t: () => Stream[A]) extends Stream[A]
 
 object Stream {
+  def constant[A](a: A): Stream[A] = cons(a, constant(a))
+  def from(n: Int): Stream[Int] = cons(n, from(n+1))
+  def fibs(): Stream[BigInt] = {
+    def go(n1: => BigInt, n2: => BigInt): Stream[BigInt] = {
+      cons(n1, go(n2, n1+n2))
+    }
+    go(0,1)
+  }
+  def unfold[A, S](z: S)(f: S => Option[(A, S)]): Stream[A] = f(z) match {
+    case Some((a, s)) => cons(a, unfold(s)(f))
+    case _ => empty
+  }
+  def constantViaUnfold[A](a: A): Stream[A] = unfold(a)(x => Some((x,x)))
+  def fromViaUnfold(n: Int): Stream[Int] = unfold(n)(x => Some((x, x+1)))
+  def fibsViaUnfold(): Stream[BigInt] = unfold[BigInt, (BigInt, BigInt)]((0, 1)){ case (x, y) => Some((x, (y, x+y)))}
+
   def cons[A](hd: => A, tl: => Stream[A]): Stream[A] = {
     lazy val head = hd
     lazy val tail = tl
