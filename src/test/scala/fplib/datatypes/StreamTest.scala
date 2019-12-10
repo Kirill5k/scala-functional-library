@@ -6,6 +6,7 @@ class StreamTest extends FunSpec with Matchers {
 
   describe("stream") {
     val ints = Stream(1,2,3,4,5)
+    val ints2 = Stream(6,7,8,9)
     val strings = Stream("a", "b", "c", "d", "e")
 
     describe("head") {
@@ -33,8 +34,10 @@ class StreamTest extends FunSpec with Matchers {
 
     describe("take while") {
       it("should return elements while function is true") {
+        ints.takeWhile(i => i < 2 || i > 4).toList should be (List(1))
         ints.takeWhile(_ < 4).toList should be (List(1,2,3))
         ints.takeWhile(_ > 0).toList should be (List(1,2,3,4,5))
+        ints.takeWhileViaFold(i => i < 2 || i > 4).toList should be (List(1))
         ints.takeWhileViaFold(_ < 4).toList should be (List(1,2,3))
         ints.takeWhileViaFold(_ > 0).toList should be (List(1,2,3,4,5))
       }
@@ -60,6 +63,35 @@ class StreamTest extends FunSpec with Matchers {
       it("should return true if condition matches for all elements") {
         ints.foldRight(0)(_+_) should be (15)
         strings.foldRight("")(_+_) should be ("abcde")
+      }
+    }
+
+    describe("map") {
+      it("should apply f to all elements") {
+        ints.map(_.toString).toList should be (List("1", "2", "3", "4", "5"))
+        ints.mapViaFold(_.toString).toList should be (List("1", "2", "3", "4", "5"))
+      }
+    }
+
+    describe("append") {
+      it("should append stream") {
+        ints.append(ints2).toList should be (List(1,2,3,4,5,6,7,8,9))
+        ints.appendViaFold(ints2).toList should be (List(1,2,3,4,5,6,7,8,9))
+      }
+    }
+
+    describe("filter") {
+      it("should filter elements based on predicate") {
+        ints.filter(i => i < 2 || i > 4).toList should be (List(1,5))
+        ints.filter(_ % 2 == 0).toList should be (List(2,4))
+        ints.filterViaFold(_ % 2 == 0).toList should be (List(2,4))
+        ints.filterViaFold(i => i < 2 || i > 4).toList should be (List(1,5))
+      }
+    }
+
+    describe("flamtMap") {
+      it("should apply f to all elements") {
+        ints.map(i => Stream(i.toString)).toList should be (List("1", "2", "3", "4", "5"))
       }
     }
   }

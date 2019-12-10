@@ -18,13 +18,12 @@ sealed trait Stream[+A] {
       case EmptyStream => empty
       case StreamCons(h, t) => cons(h(), t().take(n-1))
     }
-
   def takeWhile(f: A => Boolean): Stream[A] = this match {
     case StreamCons(h, t) if f(h()) => cons(h(), t().takeWhile(f))
     case _ => empty
   }
   def takeWhileViaFold(f: A => Boolean): Stream[A] =
-    foldRight[Stream[A]](empty)((el, acc) => if(f(el)) cons(el, acc) else acc)
+    foldRight[Stream[A]](empty)((el, acc) => if(f(el)) cons(el, acc) else empty)
   def foldRight[B](z: => B)(f: (A, => B) => B): B = this match {
     case StreamCons(h, t) => f(h(), t().foldRight(z)(f))
     case _ => z
@@ -38,10 +37,23 @@ sealed trait Stream[+A] {
     case StreamCons(h, t) => f(h()) && t().forAll(f)
     case EmptyStream => true
   }
-  //TODO
-  def map[B](f: A => B): Stream[B] = ???
-  def append[B>:A](s: => Stream[B]): Stream[B] = ???
-  def filter(f: A => Boolean): Stream[A] = ???
+  def map[B](f: A => B): Stream[B] = this match {
+    case EmptyStream => empty
+    case StreamCons(h, t) => cons(f(h()), t().map(f))
+  }
+  def mapViaFold[B](f: A => B): Stream[B] = foldRight[Stream[B]](empty)((el, acc) => cons(f(el), acc))
+  def append[B>:A](s: => Stream[B]): Stream[B] = this match {
+    case EmptyStream => s
+    case StreamCons(h, t) => cons(h(), t().append(s))
+  }
+  def appendViaFold[B>:A](s: => Stream[B]): Stream[B] = foldRight(s)((el, acc) => cons(el, acc))
+  def filter(f: A => Boolean): Stream[A] = this match {
+    case EmptyStream => empty
+    case StreamCons(h, t) if f(h()) => cons(h(), t().filter(f))
+    case StreamCons(_, t) => t().filter(f)
+  }
+  def filterViaFold(f: A => Boolean): Stream[A] =
+    foldRight[Stream[A]](empty)((el, acc) => if (f(el)) cons(el, acc) else acc)
   def flatMap[B](f: A => Stream[B]): Stream[B] = ???
 }
 case object EmptyStream extends Stream[Nothing]
