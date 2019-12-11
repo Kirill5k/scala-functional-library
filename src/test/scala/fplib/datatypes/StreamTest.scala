@@ -148,5 +148,11 @@ class StreamTest extends FunSpec with Matchers {
         ints.startsWith(Stream(1,2,3,4,5,6)) should be (false)
       }
     }
+
+    describe("scanRight") {
+      it("should return stream of intermediate results") {
+        ints.scanRight(0)(_+_).toList should be (List(15, 14, 12, 9, 5,0))
+      }
+    }
   }
 }

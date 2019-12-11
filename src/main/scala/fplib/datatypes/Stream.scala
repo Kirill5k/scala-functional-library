@@ -85,6 +85,10 @@ sealed trait Stream[+A] {
     case EmptyStream => None
   }.append(Stream(empty))
   def hasSubsequence[A](s: Stream[A]): Boolean = tails.exists(_.startsWith(s))
+  def scanRight[B](z: B)(f: (A, => B) => B): Stream[B] = unfold(this){
+    case s @ StreamCons(_, t) => Some(s.foldRight(z)(f), t())
+    case EmptyStream => None
+  }.append(Stream(z))
 }
 case object EmptyStream extends Stream[Nothing]
 case class StreamCons[+A](h: () => A, t: () => Stream[A]) extends Stream[A]
