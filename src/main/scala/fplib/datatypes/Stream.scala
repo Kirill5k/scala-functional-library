@@ -75,9 +75,15 @@ sealed trait Stream[+A] {
     case (StreamCons(h1, t1), EmptyStream) => Some(((Some(h1()), None), (t1(), empty)))
     case (EmptyStream, EmptyStream) => None
   }
-  //TODO
-  def startsWith[A](s: Stream[A]): Boolean = ???
-  def tails: Stream[Stream[A]] = ???
+  def startsWith[A](s2: Stream[A]): Boolean = zipAll(s2).foldRight(true){
+    case ((Some(h1), Some(h2)), acc) if h1 == h2 && acc => true
+    case ((_, None), acc) if acc => true
+    case _ => false
+  }
+  def tails: Stream[Stream[A]] = unfold(this){
+    case x @ StreamCons(_, t) => Some((x, t()))
+    case EmptyStream => None
+  }.append(Stream(empty))
   def hasSubsequence[A](s: Stream[A]): Boolean = tails.exists(_.startsWith(s))
 }
 case object EmptyStream extends Stream[Nothing]

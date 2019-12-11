@@ -134,5 +134,19 @@ class StreamTest extends FunSpec with Matchers {
         (List((Some(1), Some(2)), (Some(1), Some(2)), (Some(1), Some(2)), (Some(1), Some(2)), (Some(1), None)))
       }
     }
+
+    describe("tails") {
+      it("should split stream into subsequences") {
+        ints.tails.map(_.toList).toList should be (List(List(1,2,3,4,5), List(2,3,4,5), List(3,4,5),  List(4,5), List(5), List()))
+      }
+    }
+
+    describe("startWith") {
+      it("should split stream into subsequences") {
+        ints.startsWith(Stream(1,2,3)) should be (true)
+        ints.startsWith(Stream(2,3)) should be (false)
+        ints.startsWith(Stream(1,2,3,4,5,6)) should be (false)
+      }
+    }
   }
 }
