@@ -16,33 +16,53 @@ case class SimpleRng(seed: Long) extends Rng {
 }
 
 object Rng {
-  def nonNegativeInt(rng: Rng): (Int, Rng) = {
+  type Rand[+A] = Rng => (A, Rng)
+
+  val int: Rand[Int] = _.nextInt
+
+  val nonNegativeInt: Rand[Int] = rng => {
     val (i, r) = rng.nextInt
     (if (i < 0) -(i + 1) else i, r)
   }
 
-  def double(rng: Rng): (Double, Rng) = {
-    val (i, r) = nonNegativeInt(rng)
-    (i / (Int.MaxValue.toDouble + 1), r)
-  }
+  val double: Rand[Double] = map(nonNegativeInt)(_ / (Int.MaxValue.toDouble + 1))
 
-  def intDouble(rng: Rng): ((Int, Double), Rng) = {
+  val intDouble: Rand[(Int, Double)] = rng => {
     val (i, rng1) = rng.nextInt
     val (d, rng2) = double(rng1)
     ((i, d), rng2)
   }
 
-  def ints(n: Int)(rng: Rng): (List[Int], Rng) = {
+  val intDoubleViaMap2: Rand[(Int, Double)] = map2(int, double)((_, _))
+
+  def ints(n: Int): Rand[List[Int]] = rng => {
     @tailrec
     def go(r: Rng, c: Int, is: List[Int]): (List[Int], Rng) = {
       if (c < 1) (is, r)
       else {
-        val (i, r1) = r.nextInt
-        go(r1, c-1, i :: is)
+        val (i, r1) = int(r)
+        go(r1, c-1, is :+ i)
       }
     }
     go(rng, n, Nil)
   }
 
+  def intsViaSequence(n: Int): Rand[List[Int]] = sequence(List.fill(n)(int))
 
+  def unit[A](a: A): Rand[A] = rng => (a, rng)
+
+  def map[A,B](s: Rand[A])(f: A => B): Rand[B] = rng => {
+    val (a, rng2) = s(rng)
+    (f(a), rng2)
+  }
+
+  def map2[A,B,C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] = rng => {
+    val (a, r1) = ra(rng)
+    val (b, r2) = rb(r1)
+    (f(a,b), r2)
+  }
+
+  def both[A,B](ra: Rand[A], rb: Rand[B]): Rand[(A, B)] = map2(ra, rb)((_,_))
+
+  def sequence[A](fs: List[Rand[A]]): Rand[List[A]] = fs.foldRight[Rand[List[A]]](unit(Nil))((el, acc) => map2(el, acc)(_ :: _))
 }
