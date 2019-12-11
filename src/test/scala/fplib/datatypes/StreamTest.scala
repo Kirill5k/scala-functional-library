@@ -29,6 +29,7 @@ class StreamTest extends FunSpec with Matchers {
     describe("take") {
       it("should return first n elements") {
         ints.take(3).toList should be (List(1,2,3))
+        ints.takeViaUnfold(3).toList should be (List(1,2,3))
       }
     }
 
@@ -40,6 +41,9 @@ class StreamTest extends FunSpec with Matchers {
         ints.takeWhileViaFold(i => i < 2 || i > 4).toList should be (List(1))
         ints.takeWhileViaFold(_ < 4).toList should be (List(1,2,3))
         ints.takeWhileViaFold(_ > 0).toList should be (List(1,2,3,4,5))
+        ints.takeWhileViaUnfold(i => i < 2 || i > 4).toList should be (List(1))
+        ints.takeWhileViaUnfold(_ < 4).toList should be (List(1,2,3))
+        ints.takeWhileViaUnfold(_ > 0).toList should be (List(1,2,3,4,5))
       }
     }
 
@@ -70,6 +74,7 @@ class StreamTest extends FunSpec with Matchers {
       it("should apply f to all elements") {
         ints.map(_.toString).toList should be (List("1", "2", "3", "4", "5"))
         ints.mapViaFold(_.toString).toList should be (List("1", "2", "3", "4", "5"))
+        ints.mapViaUnfold(_.toString).toList should be (List("1", "2", "3", "4", "5"))
       }
     }
 
@@ -120,6 +125,13 @@ class StreamTest extends FunSpec with Matchers {
       it("should generate sequence of fibs") {
         Stream.fibs().take(10).toList should be (List(0,1,1,2,3,5,8,13,21,34))
         Stream.fibsViaUnfold().take(10).toList should be (List(0,1,1,2,3,5,8,13,21,34))
+      }
+    }
+
+    describe("zipAll") {
+      it("should zip 2 streams together") {
+        Stream.constant(1).take(5).zipAll(Stream.constant(2).take(4)).toList should be
+        (List((Some(1), Some(2)), (Some(1), Some(2)), (Some(1), Some(2)), (Some(1), Some(2)), (Some(1), None)))
       }
     }
   }

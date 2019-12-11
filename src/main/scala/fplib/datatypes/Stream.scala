@@ -18,12 +18,21 @@ sealed trait Stream[+A] {
       case EmptyStream => empty
       case StreamCons(h, t) => cons(h(), t().take(n-1))
     }
+  def takeViaUnfold(n: Int): Stream[A] = unfold[A, (Stream[A], Int)]((this, n)){
+    case (_, c) if c < 1 => None
+    case (StreamCons(h, t), c) => Some((h(), (t(), c-1)))
+    case (EmptyStream, _) => None
+  }
   def takeWhile(f: A => Boolean): Stream[A] = this match {
     case StreamCons(h, t) if f(h()) => cons(h(), t().takeWhile(f))
     case _ => empty
   }
   def takeWhileViaFold(f: A => Boolean): Stream[A] =
     foldRight[Stream[A]](empty)((el, acc) => if(f(el)) cons(el, acc) else empty)
+  def takeWhileViaUnfold(f: A => Boolean): Stream[A] = unfold(this){
+    case StreamCons(h, t) if f(h()) => Some((h(), t()))
+    case _ => None
+  }
   def foldRight[B](z: => B)(f: (A, => B) => B): B = this match {
     case StreamCons(h, t) => f(h(), t().foldRight(z)(f))
     case _ => z
@@ -42,6 +51,10 @@ sealed trait Stream[+A] {
     case StreamCons(h, t) => cons(f(h()), t().map(f))
   }
   def mapViaFold[B](f: A => B): Stream[B] = foldRight[Stream[B]](empty)((el, acc) => cons(f(el), acc))
+  def mapViaUnfold[B](f: A => B): Stream[B] = unfold[B, Stream[A]](this) {
+    case StreamCons(h, t) => Some((f(h()), t()))
+    case EmptyStream => None
+  }
   def append[B>:A](s: => Stream[B]): Stream[B] = this match {
     case EmptyStream => s
     case StreamCons(h, t) => cons(h(), t().append(s))
@@ -56,6 +69,12 @@ sealed trait Stream[+A] {
     foldRight[Stream[A]](empty)((el, acc) => if (f(el)) cons(el, acc) else acc)
   def flatMap[B](f: A => Stream[B]): Stream[B] = foldRight(empty[B])((h,t) => f(h) append t)
   def find(f: A => Boolean): Option[A] = filter(f).head
+  def zipAll[B](s2: Stream[B]): Stream[(Option[A], Option[B])] = unfold((this, s2)){
+    case (StreamCons(h1, t1), StreamCons(h2, t2)) => Some(((Some(h1()), Some(h2())), (t1(), t2())))
+    case (EmptyStream, StreamCons(h2, t2)) => Some(((None, Some(h2())), (empty, t2())))
+    case (StreamCons(h1, t1), EmptyStream) => Some(((Some(h1()), None), (t1(), empty)))
+    case (EmptyStream, EmptyStream) => None
+  }
 }
 case object EmptyStream extends Stream[Nothing]
 case class StreamCons[+A](h: () => A, t: () => Stream[A]) extends Stream[A]
