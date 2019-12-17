@@ -50,4 +50,6 @@ object Monoid {
 
   def concatenate[A](as: List[A])(implicit m: Monoid[A]): A = as.foldLeft(m.zero)(m.op)
   def foldMap[A, B](as: List[A])(f: A => B)(implicit m: Monoid[B]): B = concatenate(as.map(f))
+
+  def foldLeft[A, B](as: List[A])(z: B)(f: (A, B) => B)(implicit m: Monoid[B]): B = ???
 }
