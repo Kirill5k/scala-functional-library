@@ -48,8 +48,14 @@ object Monoid {
     override def zero: A => A = identity
   }
 
+  def dual[A](m: Monoid[A]): Monoid[A] = new Monoid[A] {
+    def op(x: A, y: A): A = m.op(y, x)
+    val zero = m.zero
+  }
+
   def concatenate[A](as: List[A])(implicit m: Monoid[A]): A = as.foldLeft(m.zero)(m.op)
   def foldMap[A, B](as: List[A])(f: A => B)(implicit m: Monoid[B]): B = concatenate(as.map(f))
 
-  def foldLeft[A, B](as: List[A])(z: B)(f: (A, B) => B)(implicit m: Monoid[B]): B = ???
+  def foldLeft[A, B](as: List[A])(z: B)(f: (B, A) => B)(implicit m: Monoid[B]): B =
+    foldMap[A, B => B](as)(a => b => f(b, a))(endoMonoid[B])(z)
 }
