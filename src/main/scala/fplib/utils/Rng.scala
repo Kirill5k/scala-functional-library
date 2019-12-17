@@ -1,4 +1,4 @@
-package fplib.effects
+package fplib.utils
 
 import scala.annotation.tailrec
 

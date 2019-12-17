@@ -1,5 +1,7 @@
 package fplib.effects
 
+import fplib.utils.{Part, Stub, WordCount}
+
 
 trait Monoid[A] {
   def op(a1: A, a2: A): A
@@ -58,4 +60,24 @@ object Monoid {
 
   def foldLeft[A, B](as: List[A])(z: B)(f: (B, A) => B)(implicit m: Monoid[B]): B =
     foldMap[A, B => B](as)(a => b => f(b, a))(endoMonoid[B])(z)
+
+  def foldMap[A, B](as: IndexedSeq[A])(f: A => B)(implicit m: Monoid[B]): B = {
+    if (as.size < 1) m.zero
+    else if (as.size == 1) f(as(0))
+    else {
+      val (l, r) = as.splitAt(as.size/2)
+      m.op(foldMap(l)(f), foldMap(r)(f))
+    }
+  }
+
+  val wordCountMonoid: Monoid[WordCount] = new Monoid[WordCount] {
+    override def op(a1: WordCount, a2: WordCount): WordCount = (a1, a2) match {
+      case (Part(l1, c1, r1), Part(l2, c2, r2)) => Part(l1, c1+c2  + (if ((r1 + l2).isEmpty) 0 else 1) , r2)
+      case (Part(l1, c1, r1), Stub(s1)) => Part(l1, c1, r1+s1)
+      case (Stub(s1), Part(l1, c1, r1)) => Part(s1+l1, c1, r1)
+      case (Stub(s1), Stub(s2)) => Stub(s1+s2)
+    }
+
+    override def zero: WordCount = Stub("")
+  }
 }
