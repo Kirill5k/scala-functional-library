@@ -11,5 +11,19 @@ class MonoidTest extends FunSpec with Matchers {
         result should be (List(1,2,3,4,5))
       }
     }
+
+    describe("concatenate") {
+      it("should concat all list elements together") {
+        val result = Monoid.concatenate(List(1,2,3,4,5,6))(Monoid.intAdditionMonoid)
+        result should be (21)
+      }
+    }
+
+    describe("foldMap") {
+      it("should map and concat all list elements together") {
+        val result = Monoid.foldMap(List(1,2,3,4,5,6))(_.toString)(Monoid.stringMonoid)
+        result should be ("123456")
+      }
+    }
   }
 }
