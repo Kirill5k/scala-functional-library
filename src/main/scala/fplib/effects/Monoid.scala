@@ -80,4 +80,17 @@ object Monoid {
 
     override def zero: WordCount = Stub("")
   }
+
+  def productMonoid[A,B](ma: Monoid[A], mb: Monoid[B]): Monoid[(A, B)] = new Monoid[(A, B)] {
+    override def op(a1: (A, B), a2: (A, B)): (A, B) = (a1, a2) match {
+      case ((x1, y1), (x2, y2)) => (ma.op(x1, x2), mb.op(y1, y2))
+    }
+
+    override def zero: (A, B) = (ma.zero, mb.zero)
+  }
+
+  def functionMonoid[A, B](mb: Monoid[B]): Monoid[A => B] = new Monoid[A => B] {
+    override def op(f1: A => B, f2: A => B): A => B = a => mb.op(f1(a), f2(a))
+    override def zero: A => B = _ => mb.zero
+  }
 }
