@@ -6,7 +6,9 @@ trait Foldable[F[_]] {
   def foldRight[A,B](as: F[A])(z: B)(f: (A,B) => B): B
   def foldLeft[A,B](as: F[A])(z: B)(f: (B,A) => B): B
   def foldMap[A,B](as: F[A])(f: A => B)(implicit mb: Monoid[B]): B
+
   def concatenate[A](as: F[A])(implicit m: Monoid[A]): A = foldLeft(as)(m.zero)(m.op)
+  def toList[A](as: F[A]): List[A] = foldRight[A, List[A]](as)(List[A]())(_ :: _)
 }
 
 object Foldable {
