@@ -13,6 +13,10 @@ trait Monad[F[_]] extends Functor[F] {
   def product[A,B](ma: F[A], mb: F[B]): F[(A,B)] = map2(ma, mb)((_,_))
   def filterM[A](ms: List[A])(f: A => F[Boolean]): F[List[A]] =
     ms.foldLeft[F[List[A]]](unit(List()))((acc, el) => map2(acc, f(el))((x, y) => if (y) x :+ el else x))
+  def compose[A,B,C](f: A => F[B], g: B => F[C]): A => F[C] = a => flatMap(f(a))(g)
+  def flatMapViaCompose[A,B](fa: F[A])(f: A => F[B]): F[B] = compose[Unit, A, B]((_: Unit) => fa, f)(())
+  def join[A](mma: F[F[A]]): F[A] = flatMap(mma)(ma => ma)
+  def flatMapViaMapJoin[A,B](fa: F[A])(f: A => F[B]): F[B] = join(map(fa)(f))
 }
 
 object Monad {
