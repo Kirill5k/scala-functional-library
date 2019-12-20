@@ -4,7 +4,8 @@ trait Monad[F[_]] extends Applicative[F] {
   def unit[A](a: => A): F[A]
   def flatMap[A,B](fa: F[A])(f: A => F[B]): F[B]
 
-  def apply[A,B](fab: F[A => B])(fa: F[A]): F[B] = flatMap(fa)(a => map(fab)(f => f(a)))
+  override def apply[A,B](fab: F[A => B])(fa: F[A]): F[B] = flatMap(fa)(a => map(fab)(f => f(a)))
+  def map2[A,B,C](fa: F[A], fb: F[B])(f: (A,B) => C): F[C] = flatMap(fa)(a => map(fb)(b => f(a,b)))
   def filterM[A](ms: List[A])(f: A => F[Boolean]): F[List[A]] =
     ms.foldLeft[F[List[A]]](unit(List()))((acc, el) => map2(acc, f(el))((x, y) => if (y) x :+ el else x))
   def compose[A,B,C](f: A => F[B], g: B => F[C]): A => F[C] = a => flatMap(f(a))(g)
