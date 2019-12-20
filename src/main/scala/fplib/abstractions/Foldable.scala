@@ -1,4 +1,4 @@
-package fplib.effects
+package fplib.abstractions
 
 import scala.collection.immutable.List
 
