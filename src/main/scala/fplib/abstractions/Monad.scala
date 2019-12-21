@@ -24,4 +24,10 @@ object Monad {
     override def unit[A](a: => A): List[A] = List(a)
     override def flatMap[A, B](fa: List[A])(f: A => List[B]): List[B] = fa.flatMap(f)
   }
+
+  type Id[A] = A
+  implicit val idMonad: Monad[Id] = new Monad[Id] {
+    override def unit[A](a: => A): A = a
+    override def flatMap[A, B](a: A)(f: A => B): B = f(a)
+  }
 }
