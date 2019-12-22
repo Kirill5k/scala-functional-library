@@ -2,11 +2,15 @@ package fplib.effects
 
 import fplib.abstractions.Monad
 
-trait IO[A] { self =>
-  def run: A
-  def map[B](f: A => B): IO[B] = new IO[B] { def run: B = f(self.run) }
-  def flatMap[B](f: A => IO[B]): IO[B] = new IO[B] { def run: B = f(self.run).run }
+
+sealed trait IO[A] {
+  def flatMap[B](f: A => IO[B]): IO[B] = FlatMap(this, f)
+  def map[B](f: A => B): IO[B] = flatMap(f.andThen(Return(_)))
 }
+
+case class Return[A](a: A) extends IO[A]
+case class Suspend[A](resume: () => A) extends IO[A]
+case class FlatMap[A,B](sub: IO[A], f: A => IO[B]) extends IO[B]
 
 object IO extends Monad[IO] {
   override def unit[A](a: => A): IO[A] = new IO[A] { def run = a }
