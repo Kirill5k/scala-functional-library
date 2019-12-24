@@ -1,6 +1,5 @@
 package fplib.abstractions
 
-
 trait Monad[F[_]] extends Applicative[F] {
   def unit[A](a: => A): F[A]
   def flatMap[A,B](fa: F[A])(f: A => F[B]): F[B]
@@ -13,6 +12,10 @@ trait Monad[F[_]] extends Applicative[F] {
   def flatMapViaCompose[A,B](fa: F[A])(f: A => F[B]): F[B] = compose[Unit, A, B]((_: Unit) => fa, f)(())
   def join[A](mma: F[F[A]]): F[A] = flatMap(mma)(ma => ma)
   def flatMapViaMapJoin[A,B](fa: F[A])(f: A => F[B]): F[B] = join(map(fa)(f))
+  def forever[A,B](a: F[A]): F[B] = {
+    lazy val t: F[B] = flatMap(a)(_ => t)
+    t
+  }
 }
 
 object Monad {
@@ -32,3 +35,4 @@ object Monad {
     override def flatMap[A, B](a: A)(f: A => B): B = f(a)
   }
 }
+

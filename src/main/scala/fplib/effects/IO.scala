@@ -16,4 +16,15 @@ object IO extends Monad[IO] {
   override def unit[A](a: => A): IO[A] = new IO[A] { def run = a }
   override def flatMap[A, B](fa: IO[A])(f: A => IO[B]): IO[B] = fa.flatMap(f)
   def apply[A](a: => A): IO[A] = unit(a)
+
+  @annotation.tailrec
+  def run[A](io: IO[A]): A = io match {
+    case Return(a) => a
+    case Suspend(r) => r()
+    case FlatMap(x, f) => x match {
+      case Return(a) => run(f(a))
+      case Suspend(r) => run(f(r()))
+      case FlatMap(y, g) => run(y.flatMap(a => g(a)).flatMap(f))
+    }
+  }
 }
