@@ -5,7 +5,7 @@ import scala.concurrent.{ExecutionContext, Future, Promise}
 
 final class Fiber[A](io: IO[A]) {
 
-  private var result: Option[Either[Throwable, A]] = None
+  private var result: Option[Either[Throwable, A]]                 = None
   private val callbacks: ArrayBuffer[Either[Throwable, A] => Unit] = ArrayBuffer.empty
 
   def start(): Unit = ExecutionContext.global.execute { () =>
@@ -18,7 +18,7 @@ final class Fiber[A](io: IO[A]) {
   def join: IO[A] = IO.async { cb =>
     result match {
       case Some(value) => cb(value)
-      case None => callbacks += cb
+      case None        => callbacks += cb
     }
 
   }
@@ -28,11 +28,17 @@ sealed trait IO[A] {
   def flatMap[B](f: A => IO[B]): IO[B] = IO.FlatMap(this, f)
 
   def zip[B](that: IO[B]): IO[(A, B)] = flatMap(a => that.map(b => (a, b)))
-  def map[B](f: A => B): IO[B] = flatMap[B](a => IO.pure(f(a)))
-  def as[B](b: B): IO[B] = map(_ => b)
+  def map[B](f: A => B): IO[B]        = flatMap[B](a => IO.pure(f(a)))
+  def as[B](b: B): IO[B]              = map(_ => b)
 
   def runAsync(register: Either[Throwable, A] => Unit): Unit
   def fork: IO[Fiber[A]] = IO.Fork(this)
+  def zipPar[B](that: IO[B]): IO[(A, B)] = for {
+    fa <- this.fork
+    fb <- that.fork
+    a  <- fa.join
+    b  <- fb.join
+  } yield (a, b)
 
   def toFuture: Future[A] = {
     val p = Promise[A]()
@@ -45,29 +51,29 @@ sealed trait IO[A] {
 }
 
 object IO {
-  final case class Pure[A](a: A) extends IO[A] {
+  final private case class Pure[A](a: A) extends IO[A] {
     override def runAsync(register: Either[Throwable, A] => Unit): Unit =
       register(Right(a))
   }
-  final case class Map[A, B](ioa: IO[A], f: A => B) extends IO[B] {
+  final private case class Map[A, B](ioa: IO[A], f: A => B) extends IO[B] {
     override def runAsync(register: Either[Throwable, B] => Unit): Unit =
       ioa.runAsync(va => register(va.fold(e => Left(e), a => Right(f(a)))))
   }
-  final case class FlatMap[A, B](ioa: IO[A], f: A => IO[B]) extends IO[B] {
+  final private case class FlatMap[A, B](ioa: IO[A], f: A => IO[B]) extends IO[B] {
     override def runAsync(register: Either[Throwable, B] => Unit): Unit =
       ioa.runAsync {
-        case Left(e) => register(Left(e))
+        case Left(e)  => register(Left(e))
         case Right(a) => f(a).runAsync(register)
       }
   }
-  final case class Delay[A](f: () => A) extends IO[A] {
+  final private case class Delay[A](f: () => A) extends IO[A] {
     override def runAsync(register: Either[Throwable, A] => Unit): Unit =
       register(Right(f()))
   }
-  final case class Async[A](cb: (Either[Throwable, A] => Unit) => Any) extends IO[A] {
+  final private case class Async[A](cb: (Either[Throwable, A] => Unit) => Any) extends IO[A] {
     override def runAsync(register: Either[Throwable, A] => Unit): Unit = cb(register)
   }
-  final case class Fork[A](io: IO[A]) extends IO[Fiber[A]] {
+  final private case class Fork[A](io: IO[A]) extends IO[Fiber[A]] {
     override def runAsync(register: Either[Throwable, Fiber[A]] => Unit): Unit = {
       val fiber = new Fiber[A](io)
       fiber.start()
@@ -75,8 +81,8 @@ object IO {
     }
   }
 
-  def apply[A](f: => A): IO[A] = IO.Delay(() => f)
-  def delay[A](f: => A): IO[A] = IO.Delay(() => f)
-  def pure[A](value: A): IO[A] = Pure(value)
-  def async[A](cb: (Either[Throwable, A] => Unit) => Any): IO[A] = IO.Async(cb)
+  def apply[A](f: => A): IO[A]                                   = Delay(() => f)
+  def delay[A](f: => A): IO[A]                                   = Delay(() => f)
+  def pure[A](value: A): IO[A]                                   = Pure(value)
+  def async[A](cb: (Either[Throwable, A] => Unit) => Any): IO[A] = Async(cb)
 }

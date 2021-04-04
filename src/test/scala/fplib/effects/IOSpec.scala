@@ -72,5 +72,16 @@ class IOSpec extends AsyncWordSpec with Matchers {
 
       result.toFuture.map(_ mustBe 139986)
     }
+
+    "zip 2 values together in parallel" in {
+      def io: IO[Int] = IO {
+        println("starting computation")
+        Thread.sleep(1000)
+        println("completed computation")
+        42
+      }
+
+      io.zipPar(io).toFuture.map(_ mustBe (42, 42))
+    }
   }
 }
