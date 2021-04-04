@@ -1,5 +1,29 @@
 package fplib.effects
 
+import scala.collection.mutable.ArrayBuffer
+import scala.concurrent.ExecutionContext
+
+final class Fiber[A](io: IO[A]) {
+
+  private var result: Option[A] = None
+  private val callbacks: ArrayBuffer[Either[Throwable, A] => Unit] = ArrayBuffer.empty
+
+  def start(): Unit = ExecutionContext.global.execute { () =>
+    io.runAsync { a =>
+      result = Some(a)
+      callbacks.foreach(cb => cb(Right(a)))
+    }
+  }
+
+  def join: IO[A] = IO.async { cb =>
+    result match {
+      case Some(value) => cb(Right(value))
+      case None => callbacks += cb
+    }
+
+  }
+}
+
 sealed trait IO[A] {
   def flatMap[B](f: A => IO[B]): IO[B] = IO.FlatMap(this, f)
 
@@ -8,6 +32,8 @@ sealed trait IO[A] {
   def as[B](b: B): IO[B] = map(_ => b)
 
   def runAsync(register: A => Unit): Unit
+  def fork: IO[Fiber[A]] = IO.Fork(this)
+
 }
 
 object IO {
@@ -30,6 +56,13 @@ object IO {
     override def runAsync(register: A => Unit): Unit = cb {
       case Right(value) => register(value)
       case Left(error) => println(s"error in async callback $error")
+    }
+  }
+  final case class Fork[A](io: IO[A]) extends IO[Fiber[A]] {
+    override def runAsync(register: Fiber[A] => Unit): Unit = {
+      val fiber = new Fiber[A](io)
+      fiber.start()
+      register(fiber)
     }
   }
 

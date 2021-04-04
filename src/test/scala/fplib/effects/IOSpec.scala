@@ -25,7 +25,7 @@ class IOSpec extends AnyWordSpec with Matchers {
 
     "suspend computation" in {
       var suspended = true
-      val io = IO.delay { suspended = false }
+      val io        = IO.delay { suspended = false }
 
       suspended mustBe true
       io.runAsync(_ => ())
@@ -52,6 +52,25 @@ class IOSpec extends AnyWordSpec with Matchers {
       }
 
       io.runAsync(_ mustBe 42)
+    }
+
+    "run computations in parallel" in {
+      def computation: IO[Int] = IO.delay {
+        println("starting computation")
+        val result = List.fill(9999)(7).sum
+        println("completed computation")
+        result
+      }
+
+      val result = for {
+        f1   <- computation.fork
+        f2   <- computation.fork
+        _    <- IO.delay(println("..."))
+        res1 <- f1.join
+        res2 <- f2.join
+      } yield res1 + res2
+
+      result.runAsync(_ mustBe 9)
     }
   }
 }
