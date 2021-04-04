@@ -1,4 +1,4 @@
-package fplib.datatypes
+package fplib.data
 
 sealed trait List[+A]
 case object EmptyList extends List[Nothing]

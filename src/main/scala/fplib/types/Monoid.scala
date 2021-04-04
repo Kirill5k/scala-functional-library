@@ -1,4 +1,4 @@
-package fplib.classtypes
+package fplib.types
 
 import fplib.utils.{Part, Stub, WordCount}
 

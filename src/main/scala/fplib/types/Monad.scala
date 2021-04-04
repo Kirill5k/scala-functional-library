@@ -1,4 +1,4 @@
-package fplib.classtypes
+package fplib.types
 
 trait Monad[F[_]] extends Functor[F] {
   def unit[A](a: A): F[A]

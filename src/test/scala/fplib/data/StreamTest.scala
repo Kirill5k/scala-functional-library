@@ -1,4 +1,4 @@
-package fplib.datatypes
+package fplib.data
 
 import org.scalatest.{FunSpec, Matchers}
 

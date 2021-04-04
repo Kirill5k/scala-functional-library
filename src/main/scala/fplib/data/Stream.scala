@@ -1,4 +1,4 @@
-package fplib.datatypes
+package fplib.data
 
 sealed trait Stream[+A] {
   import Stream._
