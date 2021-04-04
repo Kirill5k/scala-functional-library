@@ -1,19 +1,20 @@
 package fplib.utils
 
-import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 
-class WordCountTest extends FunSpec with Matchers {
+class WordCountTest extends AnyWordSpec with Matchers {
 
-  describe("WordCount") {
-    it("should count words in sentence") {
+  "A WordCount" should {
+    "count words in sentence" in {
       val text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit"
-      WordCount.count(text) should be (8)
+      WordCount.count(text) mustBe (8)
     }
 
-    it("should count words in sentence consisting of 1 word") {
-      WordCount.count("Lorem") should be (1)
-      WordCount.count(",") should be (1)
-      WordCount.count(" ") should be (0)
+    "count words in sentence consisting of 1 word" in {
+      WordCount.count("Lorem") mustBe (1)
+      WordCount.count(",") mustBe (1)
+      WordCount.count(" ") mustBe (0)
     }
   }
 
