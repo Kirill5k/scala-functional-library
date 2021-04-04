@@ -1,26 +1,25 @@
 package fplib.effects
 
 import org.scalatest.matchers.must.Matchers
-import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.wordspec.AsyncWordSpec
 
 import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
 import java.lang.Thread
 
-class IOSpec extends AnyWordSpec with Matchers {
+class IOSpec extends AsyncWordSpec with Matchers {
 
   "An IO" should {
 
     "return pure value" in {
-      IO.pure(42).runAsync(_ mustBe 42)
+      IO.pure(42).toFuture().map(_ mustBe 42)
     }
 
     "zip 2 values together" in {
-      IO.pure(42).zip(IO.pure("42")).runAsync(_ mustBe (42, "42"))
+      IO.pure(42).zip(IO.pure("42")).toFuture().map(_ mustBe (42, "42"))
     }
 
     "map value inside" in {
-      IO.pure(42).map(_ * 2).runAsync(_ mustBe 84)
+      IO.pure(42).map(_ * 2).toFuture().map(_ mustBe 84)
     }
 
     "suspend computation" in {
@@ -28,8 +27,10 @@ class IOSpec extends AnyWordSpec with Matchers {
       val io        = IO.delay { suspended = false }
 
       suspended mustBe true
-      io.runAsync(_ => ())
-      suspended mustBe false
+      io.toFuture().map{ res =>
+        res mustBe ()
+        suspended mustBe false
+      }
     }
 
     "flat map values" in {
@@ -38,7 +39,7 @@ class IOSpec extends AnyWordSpec with Matchers {
         .as(42)
         .flatMap(a => IO.delay(println("doing computation")).as(2).flatMap(b => IO.delay(a * b)))
 
-      io.runAsync(_ mustBe 84)
+      io.toFuture().map(_ mustBe 84)
     }
 
     "run async computations" in {
@@ -51,7 +52,7 @@ class IOSpec extends AnyWordSpec with Matchers {
         }
       }
 
-      io.runAsync(_ mustBe 42)
+      io.toFuture().map(_ mustBe 42)
     }
 
     "run computations in parallel" in {
@@ -70,7 +71,7 @@ class IOSpec extends AnyWordSpec with Matchers {
         res2 <- f2.join
       } yield res1 + res2
 
-      result.runAsync(_ mustBe 9)
+      result.toFuture().map(_ mustBe 139986)
     }
   }
 }

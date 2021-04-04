@@ -78,5 +78,4 @@ object IO {
   def pure[A](value: A): IO[A] = Pure(value)
   def delay[A](f: => A): IO[A] = IO.Delay(() => f)
   def async[A](cb: (Either[Throwable, A] => Unit) => Any): IO[A] = IO.Async(cb)
-
 }
