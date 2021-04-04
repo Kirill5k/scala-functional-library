@@ -1,6 +1,6 @@
 package fplib.utils
 
-import fplib.types.Monoid
+import fplib.abstractions.Monoid
 
 sealed trait WordCount
 final case class Stub(chars: String) extends WordCount

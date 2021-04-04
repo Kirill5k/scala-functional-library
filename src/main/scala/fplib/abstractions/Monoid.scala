@@ -1,4 +1,4 @@
-package fplib.types
+package fplib.abstractions
 
 import fplib.utils.{Part, Stub, WordCount}
 

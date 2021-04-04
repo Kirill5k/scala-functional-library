@@ -1,4 +1,4 @@
-package fplib.types
+package fplib.abstractions
 
 import scala.collection.immutable.List
 

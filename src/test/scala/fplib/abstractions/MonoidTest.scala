@@ -1,4 +1,4 @@
-package fplib.types
+package fplib.abstractions
 
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
