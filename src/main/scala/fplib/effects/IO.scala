@@ -34,7 +34,7 @@ sealed trait IO[A] {
   def runAsync(register: Either[Throwable, A] => Unit): Unit
   def fork: IO[Fiber[A]] = IO.Fork(this)
 
-  def toFuture(): Future[A] = {
+  def toFuture: Future[A] = {
     val p = Promise[A]()
     runAsync { cb =>
       cb.fold(p.failure, p.success)
@@ -57,7 +57,7 @@ object IO {
     override def runAsync(register: Either[Throwable, B] => Unit): Unit =
       ioa.runAsync {
         case Left(e) => register(Left(e))
-        case Right(b) => f(b).runAsync(register)
+        case Right(a) => f(a).runAsync(register)
       }
   }
   final case class Delay[A](f: () => A) extends IO[A] {
@@ -75,7 +75,8 @@ object IO {
     }
   }
 
-  def pure[A](value: A): IO[A] = Pure(value)
+  def apply[A](f: => A): IO[A] = IO.Delay(() => f)
   def delay[A](f: => A): IO[A] = IO.Delay(() => f)
+  def pure[A](value: A): IO[A] = Pure(value)
   def async[A](cb: (Either[Throwable, A] => Unit) => Any): IO[A] = IO.Async(cb)
 }
