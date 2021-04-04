@@ -3,6 +3,10 @@ package fplib.effects
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
+import java.lang.Thread
+
 class IOSpec extends AnyWordSpec with Matchers {
 
   "An IO" should {
@@ -35,6 +39,19 @@ class IOSpec extends AnyWordSpec with Matchers {
         .flatMap(a => IO.delay(println("doing computation")).as(2).flatMap(b => IO.delay(a * b)))
 
       io.runAsync(_ mustBe 84)
+    }
+
+    "run async computations" in {
+      val io = IO.async[Int] { cb =>
+        Future {
+          println("starting computation")
+          Thread.sleep(1000)
+          cb(Right(42))
+          println("completed computation")
+        }
+      }
+
+      io.runAsync(_ mustBe 42)
     }
   }
 }
