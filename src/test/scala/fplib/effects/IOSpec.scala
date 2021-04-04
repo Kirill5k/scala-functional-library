@@ -8,15 +8,15 @@ class IOSpec extends AnyWordSpec with Matchers {
   "An IO" should {
 
     "return pure value" in {
-      IORunner.run(IO.pure(42)) mustBe 42
+      IO.pure(42).runAsync(_ mustBe 42)
     }
 
     "zip 2 values together" in {
-      IORunner.run(IO.pure(42).zip(IO.pure("42"))) mustBe (42, "42")
+      IO.pure(42).zip(IO.pure("42")).runAsync(_ mustBe (42, "42"))
     }
 
     "map value inside" in {
-      IORunner.run(IO.pure(42).map(_ * 2)) mustBe 84
+      IO.pure(42).map(_ * 2).runAsync(_ mustBe 84)
     }
 
     "suspend computation" in {
@@ -24,7 +24,7 @@ class IOSpec extends AnyWordSpec with Matchers {
       val io = IO.delay { suspended = false }
 
       suspended mustBe true
-      IORunner.run(io)
+      io.runAsync(_ => ())
       suspended mustBe false
     }
 
@@ -34,7 +34,7 @@ class IOSpec extends AnyWordSpec with Matchers {
         .as(42)
         .flatMap(a => IO.delay(println("doing computation")).as(2).flatMap(b => IO.delay(a * b)))
 
-      IORunner.run(io) mustBe 84
+      io.runAsync(_ mustBe 84)
     }
   }
 }
