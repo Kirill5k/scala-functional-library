@@ -1,10 +1,10 @@
 package fplib.utils
 
-import fplib.effects.Monoid
+import fplib.classtypes.Monoid
 
 sealed trait WordCount
-case class Stub(chars: String) extends WordCount
-case class Part(lStub: String, words: Int, rStub: String) extends WordCount
+final case class Stub(chars: String) extends WordCount
+final case class Part(lStub: String, words: Int, rStub: String) extends WordCount
 
 object WordCount {
   def count(s: String): Int = {
@@ -13,7 +13,7 @@ object WordCount {
 
     Monoid.foldMap(s.toIndexedSeq)(charToStub)(Monoid.wordCountMonoid) match {
       case Stub(x) => unstub(x)
-      case Part(l, c, r) =>unstub(l) + c + unstub(r)
+      case Part(l, c, r) => unstub(l) + c + unstub(r)
     }
   }
 }

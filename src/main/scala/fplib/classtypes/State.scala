@@ -1,4 +1,4 @@
-package fplib.effects
+package fplib.classtypes
 
 final case class State[S, +A](run: S => (A, S)) {
   def map[B](f: A => B): State[S, B] = State(s => {

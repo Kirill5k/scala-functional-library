@@ -1,4 +1,4 @@
-package fplib.effects
+package fplib.classtypes
 
 import org.scalatest.{FunSpec, Matchers}
 

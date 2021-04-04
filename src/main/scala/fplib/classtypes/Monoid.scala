@@ -1,4 +1,4 @@
-package fplib.effects
+package fplib.classtypes
 
 import fplib.utils.{Part, Stub, WordCount}
 
